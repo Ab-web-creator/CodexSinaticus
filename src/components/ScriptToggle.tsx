@@ -1,33 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useHtmlFlag } from "@/lib/useHtmlFlag";
 
-/** Switches the Greek column between lowercase transcription and majuscule (uncial-style) display. */
+/** Two-part switch: Greek in lowercase (αβγ) or in majuscule/uncial capitals (ΑΒΓ) as in the codex. */
 export default function ScriptToggle() {
-  const [uncial, setUncial] = useState(false);
+  const [uncial, setUncial] = useHtmlFlag("uncial");
 
-  useEffect(() => {
-    setUncial(document.documentElement.dataset.uncial === "true");
-  }, []);
-
-  const toggle = () => {
-    const next = !uncial;
-    setUncial(next);
-    document.documentElement.dataset.uncial = String(next);
-    try {
-      localStorage.setItem("uncial", String(next));
-    } catch {}
-  };
-
-  return (
+  const option = (value: boolean, text: string, title: string) => (
     <button
       type="button"
-      onClick={toggle}
-      aria-pressed={uncial}
-      className="greek rounded-md border border-line px-3 py-1.5 text-sm hover:border-accent"
-      title="Toggle majuscule display of the Greek"
+      onClick={() => setUncial(value)}
+      aria-pressed={uncial === value}
+      title={title}
+      className={`px-2.5 py-1 ${uncial === value ? "bg-panel text-accent" : "text-muted hover:text-foreground"}`}
     >
-      {uncial ? "ΑΒΓ" : "αβγ"}
+      {text}
     </button>
+  );
+
+  return (
+    <div role="group" aria-label="Greek letter style" className="greek flex overflow-hidden rounded-md border border-line text-sm">
+      {option(false, "αβγ", "Greek in lowercase")}
+      {option(true, "ΑΒΓ", "Greek in capitals, as written in the codex")}
+    </div>
   );
 }

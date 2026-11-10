@@ -55,6 +55,19 @@ html[data-uncial="true"] .greek {
   font-family: var(--font-arabic), "Amiri", serif;
 }
 
+.dutch {
+  font-family: var(--font-greek), "Gentium Plus", Georgia, serif;
+}
+
+/* Right-hand page: Dutch by default, Arabic when chosen (TranslationSwitch). */
+.tr-ar,
+html[data-arabic="true"] .tr-nl {
+  display: none;
+}
+html[data-arabic="true"] .tr-ar {
+  display: block;
+}
+
 .nomen-sacrum {
   text-decoration: overline;
   text-decoration-thickness: 1px;
@@ -72,4 +85,40 @@ html[data-uncial="true"] .greek {
 .correction[aria-expanded="true"] {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   border-radius: 2px;
+}
+
+/* Greek paragraph size: smaller while glosses are shown (default), larger for plain reading. */
+.greek-para {
+  font-size: 1.3rem;
+  line-height: 1.9;
+}
+html:not([data-plain="true"]) .greek-para {
+  font-size: 1.1rem;
+  line-height: 1.85;
+}
+
+/* Interlinear (on unless html[data-plain="true"]): each Greek word becomes a stack with its gloss underneath. */
+.il-gloss {
+  display: none;
+}
+html:not([data-plain="true"]) .il-word {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: top;
+  margin-bottom: 0.7em;
+}
+html:not([data-plain="true"]) .il-gloss {
+  display: block;
+  font-family: var(--font-ui), system-ui, sans-serif;
+  font-size: 0.52em;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+  white-space: nowrap;
+}
+html:not([data-plain="true"]) .il-approx {
+  font-style: italic;
+  opacity: 0.7;
 }

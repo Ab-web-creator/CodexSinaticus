@@ -1,16 +1,22 @@
-import type { ArabicBook } from "./types";
+import type { TranslationBook } from "./types";
 
 export type Block = { heading?: string; verses: number[] };
 
 /**
- * Groups a chapter's verses into paragraphs, following the Arabic edition's
- * paragraph breaks. A section heading always opens a new paragraph.
+ * Groups a chapter's verses into paragraphs, following the translation's
+ * paragraph breaks (plus any `extraBreaks`, e.g. shared with the Greek). A section heading
+ * always opens a new paragraph.
  */
-export function buildBlocks(arabic: ArabicBook, chapter: string, extraVerses: number[] = []): Block[] {
-  const headings = arabic.headings?.[chapter] ?? {};
-  const paraStarts = new Set(arabic.paragraphs?.[chapter] ?? []);
+export function buildBlocks(
+  text: TranslationBook,
+  chapter: string,
+  extraVerses: number[] = [],
+  extraBreaks: number[] = [],
+): Block[] {
+  const headings = text.headings?.[chapter] ?? {};
+  const paraStarts = new Set([...(text.paragraphs?.[chapter] ?? []), ...extraBreaks]);
   const nums = [
-    ...new Set([...Object.keys(arabic.chapters[chapter] ?? {}).map(Number), ...extraVerses]),
+    ...new Set([...Object.keys(text.chapters[chapter] ?? {}).map(Number), ...extraVerses]),
   ].sort((a, b) => a - b);
 
   const blocks: Block[] = [];

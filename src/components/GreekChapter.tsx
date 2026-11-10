@@ -1,9 +1,8 @@
 import { Fragment } from "react";
-import { greekNumeral } from "@/lib/arabic";
 import type { Block } from "@/lib/paragraphs";
-import type { GreekBook, GreekVerse } from "@/lib/types";
+import { attachInterlinear } from "@/lib/interlinear";
+import type { GreekBook, GreekVerse, InterlinearBook } from "@/lib/types";
 import GreekTokens from "./GreekTokens";
-import Ornament from "./Ornament";
 
 type Item = { kind: "verse"; v: GreekVerse } | { kind: "absent"; from: number; to: number };
 
@@ -22,40 +21,51 @@ function items(nums: number[], byNum: Map<number, GreekVerse>): Item[] {
   return out;
 }
 
+const present = (n: number, byNum: Map<number, GreekVerse>) => !!byNum.get(n)?.t.length;
+
+/** Folds paragraphs made only of missing verses into the previous paragraph, so e.g. Mark 16:9–20 is one note. */
+function mergeAbsent(blocks: Block[], byNum: Map<number, GreekVerse>): Block[] {
+  const out: Block[] = [];
+  for (const b of blocks) {
+    const prev = out[out.length - 1];
+    const allAbsent = b.verses.every((n) => !present(n, byNum));
+    if (prev && allAbsent && !present(prev.verses[prev.verses.length - 1], byNum))
+      out[out.length - 1] = { ...prev, verses: [...prev.verses, ...b.verses] };
+    else out.push(b);
+  }
+  return out;
+}
+
 /** The Greek chapter of Codex Sinaiticus as a page. */
 export default function GreekChapter({
   greek,
-  bookTitle,
   chapter,
   blocks,
+  interlinear,
 }: {
   greek: GreekBook;
-  bookTitle: string;
+  interlinear?: InterlinearBook | null;
   chapter: number;
   blocks: Block[];
 }) {
+  const glosses = interlinear?.chapters[String(chapter)] ?? {};
   const verses = greek.chapters[String(chapter)] ?? [];
   const byNum = new Map(verses.map((v) => [v.v, v]));
 
   return (
-    <div lang="grc" className="greek">
-      <p className="text-center text-lg tracking-[0.2em] text-muted">{bookTitle}</p>
-      <Ornament className="mx-auto mt-4 mb-5 w-40" />
-      <h1 className="text-center text-4xl text-accent">{greekNumeral(chapter)}</h1>
-      <Ornament className="mx-auto mt-5 mb-10 w-40" />
-
-      {blocks.map((b, i) => (
-        <p key={b.verses[0]} id={`gr-v${b.verses[0]}`} className={`scroll-mt-24 text-[1.3rem] leading-[1.9] ${i > 0 ? "mt-4" : ""}`}>
+    <div lang="grc" className="greek" data-sync-col>
+      {mergeAbsent(blocks, byNum).map((b, i) => (
+        <p key={b.verses[0]} id={`gr-v${b.verses[0]}`} className={`greek-para scroll-mt-24 ${i > 0 ? "mt-4" : ""}`}>
           {items(b.verses, byNum).map((it, j) => (
             <Fragment key={j}>
               {j > 0 && " "}
               {it.kind === "verse" ? (
-                <span>
+                <span data-v={it.v.v}>
                   <sup className="me-1 font-sans text-[0.55em] font-semibold text-accent">{it.v.v}</sup>
-                  <GreekTokens tokens={it.v.t} />
+                  <GreekTokens tokens={attachInterlinear(it.v.t, glosses[String(it.v.v)])} />
                 </span>
               ) : (
-                <span className="font-sans text-sm text-muted italic">
+                <span data-v={it.from} className="font-sans text-sm text-muted italic">
                   [{chapter}:{it.from}
                   {it.to > it.from ? `–${it.to}` : ""} not in Codex Sinaiticus]
                 </span>

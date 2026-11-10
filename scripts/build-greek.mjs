@@ -13,8 +13,8 @@
 //   { c: { orig: Tok[], corr: [{ h: hand, t: Tok[] }] } }   a correction
 // The reader displays the first-hand (original scribe) text and marks corrections.
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { readFileSync } from "node:fs";
+import { TOKEN_RE, attrs, decode, pushSeg, writeGreek } from "./lib/xml.mjs";
 
 const [input, book] = process.argv.slice(2);
 if (!input || !book) {
@@ -23,24 +23,6 @@ if (!input || !book) {
 }
 
 const xml = readFileSync(input, "utf8");
-
-const decode = (s) =>
-  s
-    .replace(/&om;/g, "")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, "&");
-
-const attrs = (s) => {
-  const out = {};
-  for (const m of s.matchAll(/([\w:]+)="([^"]*)"/g)) out[m[1]] = m[2];
-  return out;
-};
-
-const TOKEN_RE =
-  /<!--[\s\S]*?-->|<!DOCTYPE[\s\S]*?\]>|<\?[\s\S]*?\?>|<(\/?)([\w:]+)([^>]*?)(\/?)>|([^<]+)/g;
 
 // Elements whose content is not part of the running biblical text.
 const SKIP = new Set(["teiHeader", "note", "fw", "seg"]);
@@ -68,18 +50,13 @@ for (const m of xml.matchAll(TOKEN_RE)) {
     if (!t) continue;
     if (pc !== null) pc += t;
     else if (word) {
-      const seg = { t };
-      if (fmt.o) seg.o = 1;
-      if (fmt.x) seg.x = 1;
-      const last = word[word.length - 1];
-      if (last && !!last.o === !!seg.o && !!last.x === !!seg.x) last.t += t;
-      else word.push(seg);
+      pushSeg(word, t, fmt);
     } else warnings.push(`Stray text "${t}" in ${verse.ref}`);
     continue;
   }
   if (!name) continue; // comment / doctype / PI
 
-  const a = rawAttrs ? attrs(rawAttrs) : {};
+  const a = attrs(rawAttrs);
 
   if (SKIP.has(name)) {
     if (selfClosing) continue;
@@ -167,21 +144,10 @@ for (const m of xml.matchAll(TOKEN_RE)) {
 
 for (const list of Object.values(chapters)) for (const v of list) delete v.ref;
 
-const out = {
+writeGreek(
   book,
-  witness: "Codex Sinaiticus (GA 01)",
-  source:
-    "Transcription by the International Greek New Testament Project (IGNTP), University of Birmingham. CC BY 4.0. Converted to JSON for this reader (first-hand text with corrections marked).",
+  "Codex Sinaiticus (GA 01)",
+  "Transcription by the International Greek New Testament Project (IGNTP), University of Birmingham. CC BY 4.0. Converted to JSON for this reader (first-hand text with corrections marked).",
   chapters,
-};
-
-const dest = `src/data/greek/${book}.json`;
-mkdirSync(dirname(dest), { recursive: true });
-writeFileSync(dest, JSON.stringify(out));
-
-const nVerses = Object.values(chapters).reduce((n, l) => n + l.length, 0);
-console.log(`Wrote ${dest}: ${Object.keys(chapters).length} chapters, ${nVerses} verses`);
-if (warnings.length) {
-  console.warn(`${warnings.length} warnings:`);
-  for (const w of warnings.slice(0, 20)) console.warn("  " + w);
-}
+  warnings,
+);

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
+import { useDismiss } from "@/lib/useDismiss";
 import { HANDS } from "@/lib/books";
 import type { CorrectionReading, GreekToken } from "@/lib/types";
 import GreekTokens from "./GreekTokens";
@@ -20,19 +21,8 @@ export default function Correction({
   const ref = useRef<HTMLSpanElement>(null);
   const id = useId();
 
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent | KeyboardEvent) => {
-      if (e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node))
-        setOpen(false);
-    };
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", close);
-    return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", close);
-    };
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  useDismiss(ref, open, close);
 
   const added = orig.length === 0;
 

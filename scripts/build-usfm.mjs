@@ -1,17 +1,18 @@
 #!/usr/bin/env node
-// Convert a USFM book file into the reader's Arabic JSON format.
+// Convert a USFM book file into the reader's translation JSON format.
 //
-// Usage: node scripts/build-arabic-usfm.mjs <input.usfm> <bookSlug> <name> <source>
-// Output: src/data/arabic/<bookSlug>.json
+// Usage: node scripts/build-usfm.mjs <input.usfm> <lang> <bookSlug> <name> <source>
+//   lang: language code of the translation, e.g. "ar" or "nl"
+// Output: src/data/translation/<lang>/<bookSlug>.json
 //
 // Handles \c, \v, \s1..\s3 (section headings, attached to the next verse) and
 // strips inline character markers such as \add ...\add* and footnotes \f ...\f*.
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
-const [input, book, name, source] = process.argv.slice(2);
-if (!input || !book || !name || !source) {
-  console.error("Usage: node scripts/build-arabic-usfm.mjs <input.usfm> <bookSlug> <name> <source>");
+const [input, lang, book, name, source] = process.argv.slice(2);
+if (!input || !lang || !book || !name || !source) {
+  console.error("Usage: node scripts/build-usfm.mjs <input.usfm> <lang> <bookSlug> <name> <source>");
   process.exit(1);
 }
 
@@ -68,8 +69,9 @@ for (const chunk of usfm.split(/(?=^\\)/m)) {
   }
 }
 
-mkdirSync("src/data/arabic", { recursive: true });
-const dest = `src/data/arabic/${book}.json`;
+const dir = `src/data/translation/${lang}`;
+mkdirSync(dir, { recursive: true });
+const dest = `${dir}/${book}.json`;
 writeFileSync(dest, JSON.stringify({ book, name, source, chapters, headings, paragraphs }));
 
 const n = Object.values(chapters).reduce((a, c) => a + Object.keys(c).length, 0);

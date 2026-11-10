@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Amiri, Gentium_Book_Plus, Inter } from "next/font/google";
 import "./globals.css";
+import { HTML_FLAGS } from "@/lib/flags";
 
 const ui = Inter({ variable: "--font-ui", subsets: ["latin"] });
 const greek = Gentium_Book_Plus({
@@ -15,8 +16,8 @@ export const metadata: Metadata = {
   description: "The Greek text of Codex Sinaiticus side by side with an Arabic translation.",
 };
 
-// Applies the saved Greek script preference before first paint to avoid a flash.
-const initScript = `try{if(localStorage.getItem("uncial")==="true")document.documentElement.dataset.uncial="true"}catch(e){}`;
+// Applies saved display preferences (see useHtmlFlag) before first paint to avoid a flash.
+const initScript = `try{${JSON.stringify(HTML_FLAGS)}.forEach(function(n){if(localStorage.getItem(n)==="true")document.documentElement.dataset[n]="true"})}catch(e){}`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

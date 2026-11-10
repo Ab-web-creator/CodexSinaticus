@@ -6,7 +6,7 @@ export type Seg = { t: string; o?: 1; x?: 1 };
 export type CorrectionReading = { h: string; t: GreekToken[] };
 
 export type GreekToken =
-  | { w: Seg[] }
+  | { w: Seg[]; il?: InterlinearEntry | 0 }
   | { p: string }
   | { c: { orig: GreekToken[]; corr: CorrectionReading[] } };
 
@@ -19,9 +19,10 @@ export type GreekBook = {
   chapters: Record<string, GreekVerse[]>;
 };
 
-export type ArabicBook = {
+/** A Bible translation (Arabic, Dutch, …), generated from USFM by scripts/build-usfm.mjs. */
+export type TranslationBook = {
   book: string;
-  /** Arabic display name of the translation, e.g. "ترجمة فان دايك" */
+  /** display name of the translation, e.g. "ترجمة فان دايك" */
   name: string;
   source: string;
   /** chapter -> verse -> text */
@@ -30,4 +31,14 @@ export type ArabicBook = {
   headings?: Record<string, Record<string, string>>;
   /** optional paragraph starts: chapter -> verse numbers that begin a paragraph */
   paragraphs?: Record<string, number[]>;
+};
+
+/** Word-level data for one Greek word. g holds glosses by language code ("en", later "ar", ...). */
+export type InterlinearEntry = { s: string; m: string; l: string; g: Record<string, string>; a?: 1 };
+
+export type InterlinearBook = {
+  book: string;
+  source: string;
+  /** chapter -> verse -> one slot per first-hand word, in reading order (0 = no data) */
+  chapters: Record<string, Record<string, (InterlinearEntry | 0)[]>>;
 };

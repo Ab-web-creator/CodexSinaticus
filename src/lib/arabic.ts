@@ -16,9 +16,3 @@ export const arabicDigits = (n: number) => digits.format(n);
 
 export const chapterTitle = (c: number) => `الأصحاح ${arabicOrdinal(c)}`;
 
-/** Greek alphabetic numeral with keraia, e.g. 2 -> "βʹ", 21 -> "καʹ". Covers 1–99. */
-export function greekNumeral(n: number): string {
-  const units = ["", "α", "β", "γ", "δ", "ε", "ϛ", "ζ", "η", "θ"];
-  const tens = ["", "ι", "κ", "λ", "μ", "ν", "ξ", "ο", "π", "ϟ"];
-  return `${tens[Math.floor(n / 10) % 10]}${units[n % 10]}ʹ`;
-}

@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build:greek": "node scripts/build-greek.mjs sources/sinaiticus/john_GA01_IGNTP.xml john",
-    "build:arabic": "node scripts/build-arabic-usfm.mjs sources/arabic-van-dyck/JHN.usfm john 'ترجمة فان دايك' 'Arabic Van Dyck (Smith–Van Dyck) translation, 1865. Public domain. Text from eBible.org.'"
+    "build:data": "node scripts/build-all.mjs"
   },
   "dependencies": {
     "next": "15.5.29",
